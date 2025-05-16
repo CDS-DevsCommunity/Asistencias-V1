@@ -13,8 +13,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegistrationResponseDto {
     private Long id;
-    private LocalDateTime horaEntrada;
-    private LocalDateTime horaSalida;
-    private String observaciones;
     private PersonResponseDto person;
 }

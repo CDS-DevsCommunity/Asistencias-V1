@@ -1,6 +1,8 @@
 package com.cds.asistencia.domain.dto.Request;
 
-import java.time.LocalDateTime;
+
+
+import jakarta.persistence.Column;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,9 +15,12 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegistrationRequestDto {
 
-    private LocalDateTime horaEntrada;
-    private LocalDateTime horaSalida;
+    private boolean asistio;
+    
+    private String metodoRegistro;
+    
+    @Column(length = 500)
     private String observaciones;
-    private PersonRequestDto person;
+
 
 }
