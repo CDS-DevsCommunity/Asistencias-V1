@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import com.cds.asistencia.domain.entities.Position;
 import com.cds.asistencia.domain.entities.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -29,5 +30,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     // Buscar usuarios por posición
     List<User> findByPositionId(Long positionId);
+
+    void deleteByEmail(String email);
+    
+
     
 }

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,6 +29,7 @@ public class Position {
     private String description;
 
     @OneToMany(mappedBy = "position")
+    @JsonIgnore
     private List<User> users = new ArrayList<>();
 
 }

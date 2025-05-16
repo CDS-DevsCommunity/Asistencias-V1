@@ -1,5 +1,7 @@
 package com.cds.asistencia.domain.dto.Request;
 
+import com.cds.asistencia.domain.entities.Position;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -17,10 +19,6 @@ public class UserRegistrationRequestDto {
     @NotBlank
     private String name;
 
-    
-    @Size(min = 3, max = 20)
-    private String username;
-
     @Email
     private String email;
 
@@ -28,5 +26,6 @@ public class UserRegistrationRequestDto {
     
     @NotBlank
     private String password;
+
     
 }

@@ -13,7 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.cds.asistencia.security.jwt.JwtAuthenticationFilter;
 import com.cds.asistencia.util.Permission;
-import com.cds.asistencia.util.Role;
+
 
 import lombok.RequiredArgsConstructor;
 
@@ -48,17 +48,17 @@ public class HttpSecurityConfig {
                         "/swagger-resources/**",
                         "/webjars/**"
                     ).permitAll()
-                    .requestMatchers("/swagger-ui/index.html").permitAll()
+                    // .requestMatchers("/swagger-ui/index.html").permitAll()
 
-                    .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
-                    .requestMatchers(HttpMethod.POST, "/auth/authenticate").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/auth/public-access").permitAll()
-                    .requestMatchers("/error").permitAll()
+                    // .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
+                    // .requestMatchers(HttpMethod.POST, "/auth/authenticate").permitAll()
+                    // .requestMatchers(HttpMethod.GET, "/auth/public-access").permitAll()
+                    // .requestMatchers("/error").permitAll()
                     
-                    .requestMatchers(HttpMethod.GET,"/cds/positions")
-                        .hasAnyAuthority(Permission.READ.name())
+                    // .requestMatchers(HttpMethod.GET,"/cds/positions")
+                    //     .hasAnyAuthority(Permission.READ.name())
                         
-                    .requestMatchers(HttpMethod.POST,"/positions").hasAuthority(Permission.CREATE.name())
+                    // .requestMatchers(HttpMethod.POST,"/positions").hasAuthority(Permission.CREATE.name())
 
                     .anyRequest().permitAll()
                 );

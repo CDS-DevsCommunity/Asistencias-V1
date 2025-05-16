@@ -11,6 +11,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.cds.asistencia.util.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -60,11 +61,13 @@ public class User implements UserDetails{
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "person_id", nullable = false, unique = true)
+    @JsonIgnore
     private Person person;
 
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "position_id")
+    @JsonIgnore
     private Position position;
 
     @Enumerated(EnumType.STRING)
@@ -106,4 +109,5 @@ public class User implements UserDetails{
         return email;
     }
 
+    
 }

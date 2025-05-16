@@ -9,6 +9,7 @@ import com.cds.asistencia.domain.entities.Person;
 import com.cds.asistencia.domain.entities.Position;
 import com.cds.asistencia.mappers.PersonMapper;
 import com.cds.asistencia.repositories.PersonRepository;
+import com.cds.asistencia.repositories.UserRepository;
 import com.cds.asistencia.services.PersonService;
 
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 public class PersonServiceImpl implements PersonService {
 
     private final PersonRepository personRepository;
+
+    private final UserRepository userRepository;
 
     @Override
     public List<Person> ListPerson() {
@@ -61,9 +64,11 @@ public class PersonServiceImpl implements PersonService {
 
     @Override
     public void deletePerson(Long id) {
-        if (personRepository.existsById(id)) {
-            throw new IllegalArgumentException("Person not found with the id:" + id);
-        } 
+         
+        Person person = personRepository.findById(id).orElseThrow(()-> new IllegalArgumentException("Person not found with id: " + id));
+        
+        userRepository.deleteByEmail(person.getEmail());
+
         personRepository.deleteById(id);
         
     }

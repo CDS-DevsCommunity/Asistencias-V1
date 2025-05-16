@@ -23,4 +23,6 @@ public interface PersonRepository extends JpaRepository<Person, Long>{
     List<Person> findByPhoneNumber(String phoneNumber);
     
     boolean existsByEmail(String email);
+
+    
 }

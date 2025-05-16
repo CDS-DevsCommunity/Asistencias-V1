@@ -2,6 +2,7 @@ package com.cds.asistencia.domain.dto.Response;
 
 import com.cds.asistencia.domain.entities.Person;
 import com.cds.asistencia.domain.entities.Position;
+import com.cds.asistencia.util.Role;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,8 +15,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserResponseDto {
     private Long id;
+    private String name;
+    private String phoneNumber;
     private String email;
     private boolean activo;
     private Position position;
     private Person person;
+    private Role role;
 }
