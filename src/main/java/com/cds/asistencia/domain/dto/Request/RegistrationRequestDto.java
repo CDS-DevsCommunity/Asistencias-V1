@@ -22,5 +22,7 @@ public class RegistrationRequestDto {
     @Column(length = 500)
     private String observaciones;
 
+    private Long registrationId;
+
 
 }

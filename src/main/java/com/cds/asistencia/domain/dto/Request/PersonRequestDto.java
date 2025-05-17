@@ -12,5 +12,4 @@ public class PersonRequestDto {
     private String email;
     private String phoneNumber;
 
-   
 }

@@ -33,6 +33,7 @@ public class Registration {
     @Column(length = 500)
     private String observaciones;
 
+    private Long eventoId;
 
     @PrePersist
     protected void onCreate() {

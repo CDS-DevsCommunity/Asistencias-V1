@@ -37,6 +37,7 @@ public class AuthenticationService {
 
     private final PasswordEncoder passwordEncoder;
 
+
     public AuthenticationResponse login(AuthenticationRequest authenticationRequest) {
 
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -49,7 +50,7 @@ public class AuthenticationService {
 
         String jwt = jwtService.generateToken(user,generateExtractClaims(user));
 
-        return new AuthenticationResponse(jwt);
+        return new AuthenticationResponse(user.getPerson().getName(),user.getEmail(),user.getPerson().getPhoneNumber(), user.getRole(),jwt);
 
     }
 
@@ -100,7 +101,7 @@ public class AuthenticationService {
 
         String jwt = jwtService.generateToken(newUser, generateExtractClaims(newUser));
 
-        return new AuthenticationResponse(jwt);
+        return new AuthenticationResponse(newUser.getPerson().getName(),newUser.getEmail(),newUser.getPerson().getPhoneNumber(), newUser.getRole(),jwt);
     }
 
 }
