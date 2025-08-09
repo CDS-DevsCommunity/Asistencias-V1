@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  job_management_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: job_management_api
+    ports:
+      - "8001:8000"
+    volumes:
+      - .:/app
+      - media_volume:/app/media
+    environment:
+      - DEBUG=True
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=asistencia
+      - DB_USER=postgres
+      - DB_PASSWORD=alan123
+      - SECRET_KEY=ZXN0ZUVzVW5TZWNyZXRvU3VwZXJMYXJnb1lTZWd1cm8xMjM0UHl0aG9uRGphbmdv
+      - CORS_ALLOW_ALL_ORIGINS=True
+    depends_on:
+      - db
+    networks:
+      - asistencia_network
+
+  db:
+    image: postgres:15
+    container_name: job_management_db
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: asistencia
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: alan123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - asistencia_network
+
+volumes:
+  postgres_data:
+  media_volume:
+
+networks:
+  asistencia_network:
+    external: true
