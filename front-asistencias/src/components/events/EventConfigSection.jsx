@@ -1,6 +1,6 @@
 import React from 'react';
 
-const EventConfigSection = ({ formData, handleChange, handleEquipamientoChange, tipos, escenarios, equipamientos, onManageEscenarios }) => {
+const EventConfigSection = ({ formData, handleChange, tipos, escenarios, onManageEscenarios, onManageEquipamientos, onRemoveEquipamiento }) => {
   return (
         <div className="p-8 bg-white rounded-lg shadow space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -27,11 +27,25 @@ const EventConfigSection = ({ formData, handleChange, handleEquipamientoChange, 
         </div>
       </div>
       <div>
-        <label htmlFor="equipamientos" className="block text-xs font-medium text-gray-500">Equipamientos (Mantén Ctrl para seleccionar varios)</label>
-        <select name="equipamientos" id="equipamientos" onChange={handleEquipamientoChange} multiple className="mt-1 block w-full bg-gray-50 border-2 border-gray-200 rounded-md p-2 h-32 text-gray-900">
-          {equipamientos.map(eq => <option key={eq.id} value={eq.id}>{eq.nombre}</option>)}
-        </select>
-        <p className="text-xs text-gray-500 mt-1">Nota: La cantidad y descripción de cada equipamiento se debe añadir. Por ahora, se asigna cantidad 1.</p>
+        <div className="flex justify-between items-center">
+          <label className="block text-xs font-medium text-gray-500">Equipamientos Seleccionados</label>
+          <button type="button" onClick={onManageEquipamientos} className="text-xs text-purple-600 hover:underline">Gestionar</button>
+        </div>
+        <div className="mt-2 space-y-2">
+          {formData.equipamientos.length === 0 ? (
+            <p className="text-sm text-gray-500">No se han añadido equipamientos.</p>
+          ) : (
+            formData.equipamientos.map((eq, index) => (
+              <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded-md">
+                <div>
+                  <p className="font-semibold text-sm text-gray-800">{eq.nombre} (x{eq.cantidad})</p>
+                  <p className="text-xs text-gray-600">{eq.descripcion}</p>
+                </div>
+                <button type="button" onClick={() => onRemoveEquipamiento(index)} className="text-red-500 text-xl">&times;</button>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
