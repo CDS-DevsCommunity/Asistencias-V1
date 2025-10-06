@@ -28,9 +28,9 @@ const staticEquipamientos = [
 
 const CreateEventPage = () => {
   const [tipos] = useState(staticTipos);
-    const [escenarios, setEscenarios] = useState(staticEscenarios);
+  const [escenarios, setEscenarios] = useState(staticEscenarios);
   const [equipamientos, setEquipamientos] = useState(staticEquipamientos);
-    const [isEscenariosModalOpen, setIsEscenariosModalOpen] = useState(false);
+  const [isEscenariosModalOpen, setIsEscenariosModalOpen] = useState(false);
   const [isEquipamientosModalOpen, setIsEquipamientosModalOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -59,8 +59,7 @@ const CreateEventPage = () => {
     }));
   };
 
-  // Esta función se llamaría desde un modal más complejo para añadir equipamientos
-  // Por ahora, la dejamos como placeholder
+  
   const handleAddEquipamiento = (equipamiento) => {
       setFormData(prev => ({
           ...prev,
@@ -105,8 +104,7 @@ const CreateEventPage = () => {
         onClose={() => setIsEquipamientosModalOpen(false)} 
         title="Gestionar Equipamientos"
       >
-        {/* Aquí necesitaríamos una interfaz más compleja para seleccionar y añadir con cantidad/descripción */}
-                <EquipamientosManager 
+        <EquipamientosManager 
           equipamientos={equipamientos}
           onUpdate={setEquipamientos}
           onAddEquipamientoToEvent={handleAddEquipamiento}
@@ -127,7 +125,7 @@ const CreateEventPage = () => {
           <EventConfigSection 
             formData={formData} 
             handleChange={handleChange} 
-                                    onManageEquipamientos={() => setIsEquipamientosModalOpen(true)}
+            onManageEquipamientos={() => setIsEquipamientosModalOpen(true)}
             onRemoveEquipamiento={handleRemoveEquipamiento}
             onManageEscenarios={() => setIsEscenariosModalOpen(true)}
             tipos={tipos}

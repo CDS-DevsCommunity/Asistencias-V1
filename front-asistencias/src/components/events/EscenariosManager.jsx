@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 // Componente para el formulario de creación/edición de escenarios
 const EscenarioForm = ({ escenario, onSave, onCancel }) => {
   const [formData, setFormData] = useState(
-    escenario || { nombre: '', ubicacion: '', descripcion: '', capacidad: 0, area: 0 }
+    escenario || { nombre: '', ubicacion: '', descripcion: '', capacidad: '', area: '' }
   );
 
   const handleChange = (e) => {
@@ -20,12 +20,12 @@ const EscenarioForm = ({ escenario, onSave, onCancel }) => {
     <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-gray-100 rounded-lg">
       <h4 className="text-lg font-semibold text-gray-800">{escenario ? 'Editar' : 'Nuevo'} Escenario</h4>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" className="p-2 border rounded-md text-gray-900" required />
-                <input type="text" name="ubicacion" value={formData.ubicacion} onChange={handleChange} placeholder="Ubicación" className="p-2 border rounded-md text-gray-900" required />
-                <input type="number" name="capacidad" value={formData.capacidad} onChange={handleChange} placeholder="Capacidad" className="p-2 border rounded-md text-gray-900" required />
-                <input type="number" name="area" value={formData.area} onChange={handleChange} placeholder="Área (m²)" className="p-2 border rounded-md text-gray-900" required />
+        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" className="p-2 border rounded-md text-gray-900" required />
+        <input type="text" name="ubicacion" value={formData.ubicacion} onChange={handleChange} placeholder="Ubicación" className="p-2 border rounded-md text-gray-900" required />
+        <input type="number" name="capacidad" value={formData.capacidad} onChange={handleChange} placeholder="Capacidad" className="p-2 border rounded-md text-gray-900" required />
+        <input type="number" name="area" value={formData.area} onChange={handleChange} placeholder="Área (m²)" className="p-2 border rounded-md text-gray-900" required />
       </div>
-            <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} placeholder="Descripción" className="w-full p-2 border rounded-md text-gray-900" rows="3"></textarea>
+        <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} placeholder="Descripción" className="w-full p-2 border rounded-md text-gray-900" rows="3"></textarea>
       <div className="flex justify-end gap-4">
         <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Cancelar</button>
         <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">Guardar</button>
@@ -42,14 +42,14 @@ const EscenariosManager = ({ escenarios: initialEscenarios, onUpdate }) => {
 
   const handleSave = (escenarioToSave) => {
     let updatedEscenarios;
-    if (escenarioToSave.id) { // Editando
+    if (escenarioToSave.id) {   
       updatedEscenarios = escenarios.map(e => e.id === escenarioToSave.id ? escenarioToSave : e);
-    } else { // Creando
-      const newEscenario = { ...escenarioToSave, id: Date.now() }; // Simular un nuevo ID
+    } else {  
+      const newEscenario = { ...escenarioToSave, id: Date.now() }; 
       updatedEscenarios = [...escenarios, newEscenario];
     }
     setEscenarios(updatedEscenarios);
-    onUpdate(updatedEscenarios); // Notificar al padre sobre la actualización
+    onUpdate(updatedEscenarios); 
     setEditingEscenario(null);
     setIsCreating(false);
   };
@@ -79,7 +79,7 @@ const EscenariosManager = ({ escenarios: initialEscenarios, onUpdate }) => {
         {escenarios.map(escenario => (
                   <div key={escenario.id} className="flex justify-between items-center p-4 bg-white/80 rounded-lg border border-gray-200">
             <div>
-              <p className="font-semibold">{escenario.nombre}</p>
+              <p className="font-semibold text-gray-800">{escenario.nombre}</p>
               <p className="text-sm text-gray-500">{escenario.ubicacion} - Capacidad: {escenario.capacidad}</p>
             </div>
             <div className="space-x-2">

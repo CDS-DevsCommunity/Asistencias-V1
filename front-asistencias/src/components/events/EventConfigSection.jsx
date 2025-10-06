@@ -12,7 +12,7 @@ const EventConfigSection = ({ formData, handleChange, tipos, escenarios, onManag
           </select>
         </div>
         <div>
-                    <div className="flex justify-between items-center">
+         <div className="flex justify-between items-center">
             <label htmlFor="escenario" className="block text-xs font-medium text-gray-500">Escenario</label>
             <button type="button" onClick={onManageEscenarios} className="text-xs text-purple-600 hover:underline">Gestionar</button>
           </div>

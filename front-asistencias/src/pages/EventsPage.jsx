@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import Header from '../components/common/Header';
 
 const EventsPage = () => {
-  const [activeTab, setActiveTab] = useState('proximos'); // 'proximos' o 'pasados'
-
-  // Placeholder para la lista de eventos. De momento está vacía.
+  const [activeTab, setActiveTab] = useState('proximos');
+ 
   const events = [];
 
   return (
@@ -38,7 +37,7 @@ const EventsPage = () => {
           </div>
         ) : (
           <div>
-            {/* Aquí se renderizará la lista de eventos */}
+            {/*renderizará la lista de eventos*/}
           </div>
         )}
 

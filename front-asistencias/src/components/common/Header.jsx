@@ -4,13 +4,13 @@ import logo from '../../assets/logo-cds1.png';
 import ProfileDropdown from './ProfileDropdown';
 
 const Header = () => {
-  const isAuthenticated = false; // Cambia esto por tu lógica de autenticación real
+  const isAuthenticated = false; 
   const [isDropdownOpen, setDropdownOpen] = useState(false);
 
   const user = {
     name: 'Gutiérrez santalla Mig...',
     email: 'gatitofeliz3211@gmail.com',
-    avatar: 'https://via.placeholder.com/40' // Reemplaza con el avatar real
+    avatar: 'https://via.placeholder.com/40'
   };
 
   return (

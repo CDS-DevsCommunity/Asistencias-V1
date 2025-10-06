@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-// Componente para el formulario de creación/edición de equipamientos
 const EquipamientoForm = ({ equipamiento, onSave, onCancel }) => {
   const [nombre, setNombre] = useState(equipamiento ? equipamiento.nombre : '');
 
@@ -21,8 +20,6 @@ const EquipamientoForm = ({ equipamiento, onSave, onCancel }) => {
   );
 };
 
-// Componente principal para gestionar equipamientos
-// Formulario para añadir un equipamiento seleccionado al evento
 const AddToEventForm = ({ equipamientos, onAdd }) => {
   const [selected, setSelected] = useState('');
   const [cantidad, setCantidad] = useState(1);
@@ -33,11 +30,10 @@ const AddToEventForm = ({ equipamientos, onAdd }) => {
     if (equipamiento) {
       onAdd({ 
         equipamiento_id: equipamiento.id, 
-        nombre: equipamiento.nombre, // Añadimos el nombre para mostrarlo en la UI
+        nombre: equipamiento.nombre, 
         cantidad: parseInt(cantidad, 10) || 1,
         descripcion 
       });
-      // Reset form
       setSelected('');
       setCantidad(1);
       setDescripcion('');
@@ -58,17 +54,17 @@ const AddToEventForm = ({ equipamientos, onAdd }) => {
   );
 };
 
-const EquipamientosManager = ({ equipamientos: initialEquipamientos, onUpdate, onAddEquipamientoToEvent }) => {
+  const EquipamientosManager = ({ equipamientos: initialEquipamientos, onUpdate, onAddEquipamientoToEvent }) => {
   const [equipamientos, setEquipamientos] = useState(initialEquipamientos);
   const [editingEquipamiento, setEditingEquipamiento] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
 
   const handleSave = (equipamientoToSave) => {
     let updatedEquipamientos;
-    if (equipamientoToSave.id) { // Editando
+    if (equipamientoToSave.id) { 
       updatedEquipamientos = equipamientos.map(e => e.id === equipamientoToSave.id ? equipamientoToSave : e);
-    } else { // Creando
-      const newEquipamiento = { ...equipamientoToSave, id: Date.now() }; // Simular un nuevo ID
+    } else { 
+      const newEquipamiento = { ...equipamientoToSave, id: Date.now() }; 
       updatedEquipamientos = [...equipamientos, newEquipamiento];
     }
     setEquipamientos(updatedEquipamientos);
@@ -105,7 +101,7 @@ const EquipamientosManager = ({ equipamientos: initialEquipamientos, onUpdate, o
         <div className="space-y-3 max-h-60 overflow-y-auto p-1">
           {equipamientos.map(equipamiento => (
             <div key={equipamiento.id} className="flex justify-between items-center p-3 bg-white/80 rounded-lg border border-gray-200">
-              <p className="font-semibold">{equipamiento.nombre}</p>
+              <p className="font-semibold text-gray-800">{equipamiento.nombre}</p>
               <div className="space-x-2">
                 <button onClick={() => { setEditingEquipamiento(equipamiento); setIsCreating(false); }} className="text-blue-500 hover:underline text-sm">Editar</button>
                 <button onClick={() => handleDelete(equipamiento.id)} className="text-red-500 hover:underline text-sm">Eliminar</button>
