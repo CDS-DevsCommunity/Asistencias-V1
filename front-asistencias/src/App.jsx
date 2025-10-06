@@ -1,11 +1,12 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import './App.css'
+/* import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import './App.css' 
 import Home from './pages/home/Home'
-import Login from './pages/login/Login'
-import Registrarse from './pages/registrarse/registrarse'
+import Login from './modules/auth/pages/login/Login'
+import Registrarse from './modules/auth/pages/registro/registrarse' 
+*/
+import IndexRoutes from './modules/routes/indexRoutes';
 
-
-const AppLayout = () => {
+/* const AppLayout = () => {
   return (
     <div className="app-container">
       <Routes>
@@ -15,14 +16,19 @@ const AppLayout = () => {
       </Routes>
     </div>
   )
-}
+} */
 
 
-function App() {
+/* function App() {
   return (
     <BrowserRouter>
       <AppLayout />
     </BrowserRouter>
+  )
+} */
+function App() {
+  return (
+    <IndexRoutes />
   )
 }
 

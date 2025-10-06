@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import FondoFormulario from '../../assets/luces-fondo-formulario.avif';
+import FondoFormulario from '../../../../assets/luces-fondo-formulario.avif';
 import Informacion from '../../components/informacion-general/Informacion'
-import LogoCds from '../../assets/logo-cds 1.png';
+import LogoCds from '../../../../assets/logo-cds 1.png';
 import './registrarse.css';
 
-const Register = () => {
+const Registrarse = () => {
     const [nombreCompleto, setNombreCompleto] = useState('');
     const [email, setEmail] = useState('');
     const [telefono, setTelefono] = useState('');
@@ -17,17 +17,13 @@ const Register = () => {
 
     const registrar = async (e) => {
         e.preventDefault();
-
         try {
-
             const response = await axios.post('/api/register', {
                 nombreCompleto,
                 email,
                 telefono,
                 password: contrasena,
             });
-
-
             console.log('Respuesta del servidor:', response);
             navigate('/login')
         } catch (error) {
@@ -97,7 +93,7 @@ const Register = () => {
                 <footer className="informacion-footer">
                     <p>
                         ¿Ya tienes cuenta?{' '}
-                        <Link to="/login">Inicia Sesión</Link>
+                        <Link to="/auth/login">Inicia Sesión</Link>
                     </p>
                 </footer>
             </div>
@@ -105,4 +101,4 @@ const Register = () => {
     );
 };
 
-export default Register;
+export default Registrarse;

@@ -1,9 +1,9 @@
 import React from 'react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import FondoFormulario from '../../assets/luces-fondo-formulario.avif'
+import FondoFormulario from '../../../../assets/luces-fondo-formulario.avif'
 import Informacion from '../../components/informacion-general/Informacion'
-import LogoCds from '../../assets/logo-cds 1.png'
+import LogoCds from '../../../../assets/logo-cds 1.png'
 import axios from 'axios'
 import './login.css'
 
@@ -63,7 +63,7 @@ const Login = () => {
                     {error && <p className="error">{error}</p>}
 
                     <footer className='informacion-footer'>
-                        <p>¿No tienes cuenta? <Link to="/registro">Registrate</Link></p>
+                        <p>¿No tienes cuenta? <Link to="/auth/registro">Registrate</Link></p>
                     </footer>
                 </div>
 
@@ -73,4 +73,4 @@ const Login = () => {
     )
 }
 
-export default Login
+export default Login 
