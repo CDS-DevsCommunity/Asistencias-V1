@@ -84,13 +84,18 @@ const EditEventPage = () => {
       hora_inicio: formData.hora_inicio,
       hora_fin: formData.hora_fin,
       cupo_maximo: parseInt(formData.cupo_maximo, 10),
-      cupo_disponible: formData.cupo_disponible,
+      cupo_disponible: parseInt(formData.cupo_maximo, 10), // Se mantiene igual al cupo_maximo como en crear
       encargado: user.username,
       tipo: parseInt(formData.tipo, 10),
       escenario: parseInt(formData.escenario, 10),
+      equipamientos: formData.equipamientos ? formData.equipamientos.map(eq => ({ 
+        equipamiento_id: eq.equipamiento_id, 
+        cantidad: eq.cantidad 
+      })) : []
     };
 
     try {
+      console.log('Payload enviado para actualizar:', payload); // Log para depuración
       await actualizarEvento(id, payload);
       setModalState({
         isOpen: true,
@@ -100,6 +105,7 @@ const EditEventPage = () => {
       });
     } catch (error) {
       console.error('Error al actualizar el evento:', error.response?.data || error.message);
+      console.log('Payload que causó el error:', payload); // Log adicional para depuración
       setModalState({
         isOpen: true,
         title: 'Error al Actualizar',
