@@ -1,17 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../modules/auth/hooks/useAuth';
 import logo from '../../assets/logo-cds1.png';
 import ProfileDropdown from './ProfileDropdown';
 
 const Header = () => {
-  const isAuthenticated = false; 
-  const [isDropdownOpen, setDropdownOpen] = useState(false);
-
-  const user = {
-    name: 'Gutiérrez santalla Mig...',
-    email: 'gatitofeliz3211@gmail.com',
-    avatar: 'https://via.placeholder.com/40'
-  };
+  const { isAuthenticated } = useAuth();
 
   return (
     <header className="bg-white shadow-md">
@@ -39,16 +33,11 @@ const Header = () => {
 
         <div className="flex items-center">
           {isAuthenticated ? (
-            <div className="relative">
-              <button onClick={() => setDropdownOpen(!isDropdownOpen)} className="flex items-center focus:outline-none">
-                <img src={user.avatar} alt="User" className="h-10 w-10 rounded-full" />
-              </button>
-              {isDropdownOpen && <ProfileDropdown user={user} />}
-            </div>
+            <ProfileDropdown />
           ) : (
             <>
-              <Link to="/login" className="text-gray-600 hover:text-purple-600 mr-4">Iniciar sesión</Link>
-              <Link to="/register" className="bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700">Registrarse</Link>
+              <Link to="/auth/login" className="text-gray-600 hover:text-purple-600 mr-4">Iniciar sesión</Link>
+              <Link to="/auth/registro" className="bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700">Registrarse</Link>
             </>
           )}
         </div>

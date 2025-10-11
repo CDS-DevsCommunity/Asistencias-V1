@@ -16,6 +16,9 @@ export default [
         sourceType: 'module',
       },
     },
+    settings: {
+      react: { version: '18.3' }
+    },
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
@@ -28,6 +31,10 @@ export default [
         'warn',
         { allowConstantExport: true },
       ],
+      // Reglas específicas para React 18 y nuevo JSX transform
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off',
+      'react/jsx-uses-vars': 'error',
     },
   },
 ]

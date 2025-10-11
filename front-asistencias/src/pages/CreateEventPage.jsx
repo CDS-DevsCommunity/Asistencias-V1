@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import EventDetailsSection from '../components/events/EventDetailsSection';
 import EventTimingSection from '../components/events/EventTimingSection';
@@ -6,32 +7,37 @@ import EventConfigSection from '../components/events/EventConfigSection';
 import Modal from '../components/common/Modal';
 import EscenariosManager from '../components/events/EscenariosManager';
 import EquipamientosManager from '../components/events/EquipamientosManager';
-
-const staticTipos = [
-  { id: 1, nombre: 'Conferencia', descripcion: 'Eventos de conferencias profesionales' },
-  { id: 2, nombre: 'Workshop', descripcion: 'Talleres prácticos y educativos' },
-  { id: 3, nombre: 'Reunión', descripcion: 'Reuniones de equipo o de trabajo' },
-];
-
-const staticEscenarios = [
-  { id: 1, nombre: 'Auditorio Principal', ubicacion: 'Edificio A - Piso 2', capacidad: 200 },
-  { id: 2, nombre: 'Sala de Reuniones B1', ubicacion: 'Edificio B - Piso 1', capacidad: 50 },
-  { id: 3, nombre: 'Laboratorio de Innovación', ubicacion: 'Edificio C - Planta Baja', capacidad: 30 },
-];
-
-const staticEquipamientos = [
-  { id: 1, nombre: 'Proyector HD' },
-  { id: 2, nombre: 'Sistema de Audio' },
-  { id: 3, nombre: 'Micrófono Inalámbrico' },
-  { id: 4, nombre: 'Pizarra Digital' },
-];
+import TiposManager from '../components/events/TiposManager';
+import { useAuth } from '../modules/auth/hooks/useAuth';
+import { obtenerTiposEventosActivos, crearEvento, listarEscenarios } from '../services/api';
 
 const CreateEventPage = () => {
-  const [tipos] = useState(staticTipos);
-  const [escenarios, setEscenarios] = useState(staticEscenarios);
-  const [equipamientos, setEquipamientos] = useState(staticEquipamientos);
+  const [escenarios, setEscenarios] = useState([]);
+  const [equipamientos, setEquipamientos] = useState([]);
+  const [tipos, setTipos] = useState([]);
   const [isEscenariosModalOpen, setIsEscenariosModalOpen] = useState(false);
   const [isEquipamientosModalOpen, setIsEquipamientosModalOpen] = useState(false);
+  const [isTiposModalOpen, setIsTiposModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth(); // Obtener el usuario del contexto de autenticación
+  const navigate = useNavigate(); // Hook para navegación
+
+  useEffect(() => {
+    const cargarDatosIniciales = async () => {
+      try {
+        const [tiposResponse, escenariosResponse] = await Promise.all([
+          obtenerTiposEventosActivos(),
+          listarEscenarios()
+        ]);
+        // La API de tipos devuelve un array directamente, mientras que escenarios devuelve un objeto con {results: [...]}
+        setTipos(tiposResponse || []);
+        setEscenarios(escenariosResponse.results || []);
+      } catch (error) {
+        console.error('Error al cargar datos iniciales:', error);
+      }
+    };
+    cargarDatosIniciales();
+  }, []);
 
   const [formData, setFormData] = useState({
     titulo: '',
@@ -41,7 +47,6 @@ const CreateEventPage = () => {
     hora_inicio: '',
     hora_fin: '',
     cupo_maximo: 0,
-    encargado: 'Admin User',
     tipo: '',
     escenario: '',
     equipamientos: [],
@@ -59,28 +64,80 @@ const CreateEventPage = () => {
     }));
   };
 
-  
-  const handleAddEquipamiento = (equipamiento) => {
-      setFormData(prev => ({
+  const handleAddEquipamiento = (equipamientoToAdd) => {
+    setFormData(prev => {
+      const isAlreadyAdded = prev.equipamientos.some(eq => eq.equipamiento_id === equipamientoToAdd.equipamiento_id);
+      if (isAlreadyAdded) {
+        return {
           ...prev,
-          equipamientos: [...prev.equipamientos, equipamiento]
-      }));
+          equipamientos: prev.equipamientos.map(eq => 
+            eq.equipamiento_id === equipamientoToAdd.equipamiento_id ? equipamientoToAdd : eq
+          )
+        };
+      }
+      return {
+        ...prev,
+        equipamientos: [...prev.equipamientos, equipamientoToAdd]
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validación completa de campos obligatorios
+    const requiredFields = ['titulo', 'descripcion', 'direccion', 'fecha', 'hora_inicio', 'hora_fin', 'tipo', 'escenario'];
+    const missingField = requiredFields.find(field => !formData[field]);
+
+    if (missingField) {
+      alert(`Por favor, completa el campo "${missingField}".`);
+      return;
+    }
+
+    if (!formData.cupo_maximo || parseInt(formData.cupo_maximo, 10) <= 0) {
+      alert('El cupo máximo debe ser un número mayor a 0.');
+      return;
+    }
+
+    // Validación de coherencia de horas
+    if (formData.hora_fin <= formData.hora_inicio) {
+      alert('La hora de finalización debe ser posterior a la hora de inicio.');
+      return;
+    }
+
+    setLoading(true);
+
+    const payload = {
+      titulo: formData.titulo,
+      descripcion: formData.descripcion,
+      direccion: formData.direccion,
+      fecha: formData.fecha,             // "2025-12-12"
+      hora_inicio: formData.hora_inicio, // "12:00"
+      hora_fin: formData.hora_fin,       // "15:00"
+      cupo_maximo: parseInt(formData.cupo_maximo, 10),
+      cupo_disponible: parseInt(formData.cupo_maximo, 10), // 👈 igual al cupo máximo al crear
+      encargado: user.username, // 👈 string, no id
+      tipo: parseInt(formData.tipo, 10),
+      escenario: parseInt(formData.escenario, 10),
+      equipamientos: formData.equipamientos.map(eq => ({
+        equipamiento_id: eq.equipamiento_id, // El backend espera 'equipamiento_id', no 'equipamiento'
+        cantidad: eq.cantidad
+      }))
+    };
+
     try {
-      const payload = {
-        ...formData,
-        cupo_disponible: formData.cupo_maximo 
-      };
-      console.log("Enviando payload:", payload);
-      // const response = await axios.post('/api/eventos/', payload, {
-      //   headers: { 'Authorization': `Bearer ${token}` } 
-      // });
-      // console.log('Evento creado:', response.data);
+      const eventoCreado = await crearEvento(payload);
+      alert(`¡Evento "${eventoCreado.titulo}" creado exitosamente!`);
+      
+      // Redirigir a la página principal después de crear el evento
+      navigate('/', { replace: true });
+      
     } catch (error) {
+      console.log("Datos enviados:", payload);
       console.error('Error al crear el evento:', error.response?.data || error.message);
+      alert('Hubo un error al crear el evento. Revisa la consola para más detalles.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -91,12 +148,7 @@ const CreateEventPage = () => {
         onClose={() => setIsEscenariosModalOpen(false)} 
         title="Gestionar Escenarios"
       >
-        <EscenariosManager 
-          escenarios={escenarios}
-          onUpdate={(updatedEscenarios) => {
-            setEscenarios(updatedEscenarios);
-          }}
-        />
+        <EscenariosManager onUpdate={setEscenarios} />
       </Modal>
 
       <Modal 
@@ -105,15 +157,22 @@ const CreateEventPage = () => {
         title="Gestionar Equipamientos"
       >
         <EquipamientosManager 
-          equipamientos={equipamientos}
-          onUpdate={setEquipamientos}
-          onAddEquipamientoToEvent={handleAddEquipamiento}
+          onUpdate={setEquipamientos} 
+          onAdd={handleAddEquipamiento}
+          onClose={() => setIsEquipamientosModalOpen(false)}
         />
-        <div className="p-4 border-t">
-            <p className="text-sm text-gray-600">Selecciona los equipamientos y luego añádelos al evento desde una futura interfaz.</p>
-        </div>
       </Modal>
+
+      <Modal 
+        isOpen={isTiposModalOpen} 
+        onClose={() => setIsTiposModalOpen(false)} 
+        title="Gestionar Tipos de Evento"
+      >
+        <TiposManager onUpdate={setTipos} />
+      </Modal>
+      
       <Header />
+
       <main className="container mx-auto px-4 py-8">
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="text-center">
@@ -128,14 +187,15 @@ const CreateEventPage = () => {
             onManageEquipamientos={() => setIsEquipamientosModalOpen(true)}
             onRemoveEquipamiento={handleRemoveEquipamiento}
             onManageEscenarios={() => setIsEscenariosModalOpen(true)}
+            onManageTipos={() => setIsTiposModalOpen(true)}
             tipos={tipos}
             escenarios={escenarios}
             equipamientos={equipamientos}
           />
 
           <div className="flex justify-end">
-            <button type="submit" className="bg-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-purple-700 transition-transform transform hover:scale-105">
-              Crear evento
+            <button type="submit" disabled={loading} className="bg-purple-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:bg-purple-700 transition-transform transform hover:scale-105 disabled:opacity-50">
+              {loading ? 'Creando evento...' : 'Crear evento'}
             </button>
           </div>
         </form>

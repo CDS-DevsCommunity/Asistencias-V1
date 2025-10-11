@@ -1,117 +1,199 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const EquipamientoForm = ({ equipamiento, onSave, onCancel }) => {
+import { 
+  listarEquipamientos, 
+  crearEquipamiento, 
+  actualizarEquipamiento, 
+  eliminarEquipamiento 
+} from '../../services/api';
+
+const EquipamientoForm = ({ equipamiento, onSave, onCancel, loading }) => {
   const [nombre, setNombre] = useState(equipamiento ? equipamiento.nombre : '');
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!nombre.trim()) return;
     onSave({ ...equipamiento, nombre });
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-gray-100 rounded-lg">
-      <h4 className="text-lg font-semibold text-gray-800">{equipamiento ? 'Editar' : 'Nuevo'} Equipamiento</h4>
-            <input type="text" value={nombre} onChange={(e) => setNombre(e.target.value)} placeholder="Nombre del equipamiento" className="w-full p-2 border rounded-md text-gray-900" required />
-      <div className="flex justify-end gap-4">
-        <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Cancelar</button>
-        <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">Guardar</button>
+    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-gradient-to-br from-orange-50 to-amber-50 rounded-xl shadow-lg border border-orange-100 mt-4">
+      <h4 className="text-xl font-bold text-gray-800">
+        {equipamiento ? '🔧 Editar Equipamiento' : '✨ Nuevo Equipamiento'}
+      </h4>
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-700">🔩 Nombre del Equipamiento</label>
+        <input 
+          type="text" 
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          placeholder="Ej: Proyector HD, Micrófono inalámbrico"
+          className="w-full p-3 bg-white border-2 border-orange-200 rounded-lg text-gray-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all duration-200 hover:border-orange-300"
+          required
+        />
+      </div>
+      <div className="flex justify-end gap-3 mt-6">
+        <button type="button" onClick={onCancel} disabled={loading} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold transition-colors">
+          Cancelar
+        </button>
+        <button type="submit" disabled={loading} className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 font-semibold transition-all duration-200 shadow-md">
+          {loading ? 'Guardando...' : '💾 Guardar Equipamiento'}
+        </button>
       </div>
     </form>
   );
 };
 
-const AddToEventForm = ({ equipamientos, onAdd }) => {
-  const [selected, setSelected] = useState('');
-  const [cantidad, setCantidad] = useState(1);
-  const [descripcion, setDescripcion] = useState('');
-
-  const handleAdd = () => {
-    const equipamiento = equipamientos.find(e => e.id === parseInt(selected));
-    if (equipamiento) {
-      onAdd({ 
-        equipamiento_id: equipamiento.id, 
-        nombre: equipamiento.nombre, 
-        cantidad: parseInt(cantidad, 10) || 1,
-        descripcion 
-      });
-      setSelected('');
-      setCantidad(1);
-      setDescripcion('');
-    }
-  };
-
-  return (
-    <div className="p-4 bg-gray-100 rounded-lg space-y-3 mb-6">
-      <h4 className="text-lg font-semibold text-gray-800">Añadir Equipamiento al Evento</h4>
-            <select value={selected} onChange={e => setSelected(e.target.value)} className="w-full p-2 border rounded-md text-gray-900">
-        <option value="">Selecciona un equipamiento</option>
-        {equipamientos.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
-      </select>
-            <input type="number" value={cantidad} onChange={e => setCantidad(e.target.value)} min="1" placeholder="Cantidad" className="w-full p-2 border rounded-md text-gray-900" />
-            <input type="text" value={descripcion} onChange={e => setDescripcion(e.target.value)} placeholder="Descripción (opcional)" className="w-full p-2 border rounded-md text-gray-900" />
-      <button onClick={handleAdd} disabled={!selected} className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400">Añadir al Evento</button>
-    </div>
-  );
-};
-
-  const EquipamientosManager = ({ equipamientos: initialEquipamientos, onUpdate, onAddEquipamientoToEvent }) => {
-  const [equipamientos, setEquipamientos] = useState(initialEquipamientos);
+const EquipamientosManager = ({ onAdd, onUpdate, onClose }) => {
+  const [equipamientos, setEquipamientos] = useState([]);
   const [editingEquipamiento, setEditingEquipamiento] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [selectedEquipamientos, setSelectedEquipamientos] = useState({});
 
-  const handleSave = (equipamientoToSave) => {
-    let updatedEquipamientos;
-    if (equipamientoToSave.id) { 
-      updatedEquipamientos = equipamientos.map(e => e.id === equipamientoToSave.id ? equipamientoToSave : e);
-    } else { 
-      const newEquipamiento = { ...equipamientoToSave, id: Date.now() }; 
-      updatedEquipamientos = [...equipamientos, newEquipamiento];
-    }
-    setEquipamientos(updatedEquipamientos);
-    onUpdate(updatedEquipamientos);
-    setEditingEquipamiento(null);
-    setIsCreating(false);
+  const handleSelectionChange = (equipamientoId, cantidad) => {
+    setSelectedEquipamientos(prev => {
+      const newSelection = { ...prev };
+      if (cantidad > 0) {
+        newSelection[equipamientoId] = cantidad;
+      } else {
+        delete newSelection[equipamientoId];
+      }
+      return newSelection;
+    });
   };
 
-  const handleDelete = (id) => {
-    const updatedEquipamientos = equipamientos.filter(e => e.id !== id);
-    setEquipamientos(updatedEquipamientos);
-    onUpdate(updatedEquipamientos);
+  const handleAddToEvent = () => {
+    const equipamientosToAdd = Object.entries(selectedEquipamientos)
+      .map(([id, cantidad]) => {
+        const equipamiento = equipamientos.find(e => e.id === parseInt(id));
+        return {
+          equipamiento_id: equipamiento.id,
+          nombre: equipamiento.nombre,
+          cantidad: cantidad,
+          descripcion: '',
+        };
+      });
+
+    if (onAdd) {
+      equipamientosToAdd.forEach(onAdd);
+    }
+    setSelectedEquipamientos({});
+    if (onClose) onClose(); // Cierra el modal después de añadir
+  };
+
+  useEffect(() => {
+    cargarEquipamientos();
+  }, []);
+
+  const cargarEquipamientos = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await listarEquipamientos();
+      const equipamientosList = response.results || [];
+      setEquipamientos(equipamientosList);
+      if (onUpdate) onUpdate(equipamientosList);
+    } catch (err) {
+      setError('Error al cargar los equipamientos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async (equipamientoToSave) => {
+    try {
+      setLoading(true);
+      setError('');
+      await (equipamientoToSave.id
+        ? actualizarEquipamiento(equipamientoToSave.id, equipamientoToSave)
+        : crearEquipamiento(equipamientoToSave));
+      
+      await cargarEquipamientos();
+      setIsCreating(false);
+      setEditingEquipamiento(null);
+    } catch (err) {
+      setError('Error al guardar el equipamiento.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este equipamiento?')) return;
+    try {
+      setLoading(true);
+      setError('');
+      await eliminarEquipamiento(id);
+      await cargarEquipamientos();
+    } catch (err) {
+      setError('Error al eliminar el equipamiento.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div>
-      <AddToEventForm equipamientos={equipamientos} onAdd={onAddEquipamientoToEvent} />
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-bold text-gray-800">🔧 Gestión de Equipamientos</h3>
+        <button onClick={() => { setIsCreating(true); setEditingEquipamiento(null); }} disabled={loading} className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 font-semibold transition-all duration-200 shadow-md disabled:opacity-50">
+          + Añadir Equipamiento
+        </button>
+      </div>
 
-      {/* Sección para gestionar la lista maestra de equipamientos */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-gray-800">Lista Maestra de Equipamientos</h3>
-          <button onClick={() => { setIsCreating(true); setEditingEquipamiento(null); }} className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">+ Añadir a la Lista</button>
+      {error && <div className="p-4 bg-red-50 border border-red-200 rounded-lg"><p className="text-red-600 text-sm">{error}</p></div>}
+      {loading && !isCreating && !editingEquipamiento && (
+        <div className="text-center p-4">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+          <p className="mt-2 text-sm text-gray-600">Cargando equipamientos...</p>
         </div>
+      )}
 
-        {(isCreating || editingEquipamiento) && (
-          <EquipamientoForm 
-            equipamiento={editingEquipamiento}
-            onSave={handleSave}
-            onCancel={() => { setIsCreating(false); setEditingEquipamiento(null); }}
-          />
-        )}
+      {(isCreating || editingEquipamiento) && (
+        <EquipamientoForm 
+          equipamiento={editingEquipamiento}
+          onSave={handleSave}
+          onCancel={() => { setIsCreating(false); setEditingEquipamiento(null); }}
+          loading={loading}
+        />
+      )}
 
-        <div className="space-y-3 max-h-60 overflow-y-auto p-1">
-          {equipamientos.map(equipamiento => (
-            <div key={equipamiento.id} className="flex justify-between items-center p-3 bg-white/80 rounded-lg border border-gray-200">
-              <p className="font-semibold text-gray-800">{equipamiento.nombre}</p>
-              <div className="space-x-2">
-                <button onClick={() => { setEditingEquipamiento(equipamiento); setIsCreating(false); }} className="text-blue-500 hover:underline text-sm">Editar</button>
-                <button onClick={() => handleDelete(equipamiento.id)} className="text-red-500 hover:underline text-sm">Eliminar</button>
+      <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+        {!loading && equipamientos.length === 0 ? (
+          <div className="text-center p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <p className="text-gray-500">No hay equipamientos registrados</p>
+          </div>
+        ) : (
+          equipamientos.map(eq => (
+            <div key={eq.id} className="flex justify-between items-center p-3 bg-white/90 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <p className="font-semibold text-gray-800 flex-1">{eq.nombre}</p>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="number"
+                  min="1"
+                  placeholder="Cant."
+                  className="w-20 p-1 border-2 border-orange-200 rounded-lg text-center text-gray-800"
+                  onChange={(e) => handleSelectionChange(eq.id, parseInt(e.target.value, 10) || 0)}
+                />
+                <button onClick={() => setEditingEquipamiento(eq)} disabled={loading} className="px-3 py-1 text-blue-600 hover:text-blue-800 text-sm font-semibold transition-colors disabled:opacity-50">✏️</button>
+                <button onClick={() => handleDelete(eq.id)} disabled={loading} className="px-3 py-1 text-red-600 hover:text-red-800 text-sm font-semibold transition-colors disabled:opacity-50">🗑️</button>
               </div>
             </div>
-          ))}
-        </div>
+          ))
+        )}
+      </div>
+      <div className="flex justify-end mt-4">
+        <button 
+          onClick={handleAddToEvent} 
+          disabled={Object.values(selectedEquipamientos).every(v => !v)}
+          className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Añadir Seleccionados al Evento
+        </button>
       </div>
     </div>
   );
 };
-
 export default EquipamientosManager;

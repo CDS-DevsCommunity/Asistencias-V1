@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {
+  listarEscenarios,
+  crearEscenario,
+  actualizarEscenario,
+  eliminarEscenario,
+} from '../../services/api';
 
-// Componente para el formulario de creación/edición de escenarios
-const EscenarioForm = ({ escenario, onSave, onCancel }) => {
+// Formulario para crear/editar un escenario
+const EscenarioForm = ({ escenario, onSave, onCancel, loading }) => {
   const [formData, setFormData] = useState(
     escenario || { nombre: '', ubicacion: '', descripcion: '', capacidad: '', area: '' }
   );
@@ -13,82 +19,157 @@ const EscenarioForm = ({ escenario, onSave, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    // Conversión de tipos antes de guardar
+    const dataToSave = {
+      ...formData,
+      capacidad: parseInt(formData.capacidad, 10),
+      area: parseFloat(formData.area),
+    };
+    onSave(dataToSave);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-gray-100 rounded-lg">
-      <h4 className="text-lg font-semibold text-gray-800">{escenario ? 'Editar' : 'Nuevo'} Escenario</h4>
+    <form onSubmit={handleSubmit} className="space-y-6 p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl shadow-lg border border-purple-100 mt-4">
+      <h4 className="text-xl font-bold text-gray-800">
+        {escenario ? '✏️ Editar Escenario' : '✨ Nuevo Escenario'}
+      </h4>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Nombre" className="p-2 border rounded-md text-gray-900" required />
-        <input type="text" name="ubicacion" value={formData.ubicacion} onChange={handleChange} placeholder="Ubicación" className="p-2 border rounded-md text-gray-900" required />
-        <input type="number" name="capacidad" value={formData.capacidad} onChange={handleChange} placeholder="Capacidad" className="p-2 border rounded-md text-gray-900" required />
-        <input type="number" name="area" value={formData.area} onChange={handleChange} placeholder="Área (m²)" className="p-2 border rounded-md text-gray-900" required />
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700">Nombre</label>
+          <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder="Ej: Auditorio Principal" className="w-full p-3 bg-white border-2 border-purple-200 rounded-lg text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all" required />
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700">Ubicación</label>
+          <input type="text" name="ubicacion" value={formData.ubicacion} onChange={handleChange} placeholder="Ej: Edificio A, Piso 2" className="w-full p-3 bg-white border-2 border-purple-200 rounded-lg text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all" required />
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700">Capacidad (personas)</label>
+          <input type="number" name="capacidad" value={formData.capacidad} onChange={handleChange} placeholder="100" className="w-full p-3 bg-white border-2 border-purple-200 rounded-lg text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all" required min="1" />
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-700">Área (m²)</label>
+          <input type="number" step="0.01" name="area" value={formData.area} onChange={handleChange} placeholder="150.5" className="w-full p-3 bg-white border-2 border-purple-200 rounded-lg text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all" required min="1" />
+        </div>
       </div>
-        <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} placeholder="Descripción" className="w-full p-2 border rounded-md text-gray-900" rows="3"></textarea>
-      <div className="flex justify-end gap-4">
-        <button type="button" onClick={onCancel} className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Cancelar</button>
-        <button type="submit" className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">Guardar</button>
+      <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-700">Descripción (opcional)</label>
+        <textarea name="descripcion" value={formData.descripcion} onChange={handleChange} placeholder="Detalles adicionales del escenario" className="w-full p-3 bg-white border-2 border-purple-200 rounded-lg text-gray-900 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all" rows="3"></textarea>
+      </div>
+      <div className="flex justify-end gap-3 mt-6">
+        <button type="button" onClick={onCancel} disabled={loading} className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 font-semibold transition-colors disabled:opacity-50">Cancelar</button>
+        <button type="submit" disabled={loading} className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-all shadow-md disabled:opacity-50">
+          {loading ? 'Guardando...' : '💾 Guardar Escenario'}
+        </button>
       </div>
     </form>
   );
 };
 
-// Componente principal para gestionar escenarios
-const EscenariosManager = ({ escenarios: initialEscenarios, onUpdate }) => {
-  const [escenarios, setEscenarios] = useState(initialEscenarios);
+// Componente principal para la gestión de escenarios
+const EscenariosManager = ({ onUpdate }) => {
+  const [escenarios, setEscenarios] = useState([]);
   const [editingEscenario, setEditingEscenario] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSave = (escenarioToSave) => {
-    let updatedEscenarios;
-    if (escenarioToSave.id) {   
-      updatedEscenarios = escenarios.map(e => e.id === escenarioToSave.id ? escenarioToSave : e);
-    } else {  
-      const newEscenario = { ...escenarioToSave, id: Date.now() }; 
-      updatedEscenarios = [...escenarios, newEscenario];
+  useEffect(() => {
+    cargarEscenarios();
+  }, []);
+
+  const cargarEscenarios = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await listarEscenarios();
+      const escenariosList = response.results || [];
+      setEscenarios(escenariosList);
+      if (onUpdate) onUpdate(escenariosList);
+    } catch (err) {
+      setError('Error al cargar los escenarios.');
+    } finally {
+      setLoading(false);
     }
-    setEscenarios(updatedEscenarios);
-    onUpdate(updatedEscenarios); 
-    setEditingEscenario(null);
-    setIsCreating(false);
   };
 
-  const handleDelete = (id) => {
-    const updatedEscenarios = escenarios.filter(e => e.id !== id);
-    setEscenarios(updatedEscenarios);
-    onUpdate(updatedEscenarios);
+  const handleSave = async (escenarioToSave) => {
+    try {
+      setLoading(true);
+      setError('');
+      await (escenarioToSave.id
+        ? actualizarEscenario(escenarioToSave.id, escenarioToSave)
+        : crearEscenario(escenarioToSave));
+      
+      await cargarEscenarios();
+      setIsCreating(false);
+      setEditingEscenario(null);
+    } catch (err) {
+      setError('Error al guardar el escenario.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Estás seguro de que quieres eliminar este escenario?')) return;
+    try {
+      setLoading(true);
+      setError('');
+      await eliminarEscenario(id);
+      await cargarEscenarios();
+    } catch (err) {
+      setError('Error al eliminar el escenario.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-                <h3 className="text-lg font-bold text-gray-800">Lista de Escenarios</h3>
-        <button onClick={() => { setIsCreating(true); setEditingEscenario(null); }} className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">+ Añadir Escenario</button>
+        <h3 className="text-xl font-bold text-gray-800">🏛️ Gestión de Escenarios</h3>
+        <button onClick={() => { setIsCreating(true); setEditingEscenario(null); }} disabled={loading} className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-all shadow-md disabled:opacity-50">
+          + Añadir Escenario
+        </button>
       </div>
+
+      {error && <div className="p-4 bg-red-50 border border-red-200 rounded-lg"><p className="text-red-600 text-sm">{error}</p></div>}
+      {loading && !isCreating && !editingEscenario && (
+        <div className="text-center p-4">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          <p className="mt-2 text-sm text-gray-600">Cargando escenarios...</p>
+        </div>
+      )}
 
       {(isCreating || editingEscenario) && (
         <EscenarioForm 
           escenario={editingEscenario}
           onSave={handleSave}
           onCancel={() => { setIsCreating(false); setEditingEscenario(null); }}
+          loading={loading}
         />
       )}
 
-            <div className="space-y-3">
-        {escenarios.map(escenario => (
-                  <div key={escenario.id} className="flex justify-between items-center p-4 bg-white/80 rounded-lg border border-gray-200">
-            <div>
-              <p className="font-semibold text-gray-800">{escenario.nombre}</p>
-              <p className="text-sm text-gray-500">{escenario.ubicacion} - Capacidad: {escenario.capacidad}</p>
+      <div className="space-y-3 max-h-72 overflow-y-auto pr-2">
+        {!loading && escenarios.length === 0 ? (
+          <div className="text-center p-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <p className="text-gray-500">No hay escenarios registrados</p>
+          </div>
+        ) : (
+          escenarios.map(esc => (
+            <div key={esc.id} className="flex justify-between items-center p-4 bg-white/90 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div>
+                <p className="font-semibold text-gray-800">{esc.nombre}</p>
+                <p className="text-sm text-gray-500">{esc.ubicacion} - Cap: {esc.capacidad} - Área: {esc.area} m²</p>
+              </div>
+              <div className="flex gap-2 ml-4">
+                <button onClick={() => setEditingEscenario(esc)} disabled={loading} className="px-3 py-1 text-blue-600 hover:text-blue-800 text-sm font-semibold transition-colors disabled:opacity-50">✏️ Editar</button>
+                <button onClick={() => handleDelete(esc.id)} disabled={loading} className="px-3 py-1 text-red-600 hover:text-red-800 text-sm font-semibold transition-colors disabled:opacity-50">🗑️ Eliminar</button>
+              </div>
             </div>
-            <div className="space-x-2">
-              <button onClick={() => { setEditingEscenario(escenario); setIsCreating(false); }} className="text-blue-500 hover:underline">Editar</button>
-              <button onClick={() => handleDelete(escenario.id)} className="text-red-500 hover:underline">Eliminar</button>
-            </div>
-                  </div>
-        ))}
-            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 };
