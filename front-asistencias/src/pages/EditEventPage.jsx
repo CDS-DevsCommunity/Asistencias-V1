@@ -45,20 +45,35 @@ const EditEventPage = () => {
           return;
         }
 
+        // Intentar mapear desde diferentes fuentes posibles
+        let equipamientosMapeados = [];
+        
+        if (eventoData.equipamientos_prestados && eventoData.equipamientos_prestados.length > 0) {
+          equipamientosMapeados = eventoData.equipamientos_prestados.map(eq => ({
+            equipamiento_id: eq.equipamiento,
+            nombre: eq.equipamiento_nombre,
+            cantidad: eq.cantidad,
+            descripcion: eq.descripcion || ''
+          }));
+        } else if (eventoData.equipamientos && eventoData.equipamientos.length > 0) {
+          equipamientosMapeados = eventoData.equipamientos.map(eq => ({
+            equipamiento_id: eq.equipamiento_id || eq.id,
+            nombre: eq.nombre || eq.equipamiento_nombre,
+            cantidad: eq.cantidad,
+            descripcion: eq.descripcion || ''
+          }));
+        }
+
         setFormData({
           ...eventoData,
           cupo_maximo: eventoData.cupo_maximo.toString(),
           tipo: eventoData.tipo.toString(),
           escenario: eventoData.escenario.toString(),
-          equipamientos: eventoData.equipamientos_prestados.map(eq => ({
-            equipamiento_id: eq.equipamiento,
-            cantidad: eq.cantidad
-          }))
+          equipamientos: equipamientosMapeados
         });
         setTipos(tiposData || []);
         setEscenarios(escenariosData.results || []);
       } catch (error) {
-        console.error('Error al cargar los datos del evento:', error);
         setModalState({
           isOpen: true,
           title: 'Error de Carga',

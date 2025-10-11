@@ -68,17 +68,19 @@ const CreateEventPage = () => {
     setFormData(prev => {
       const isAlreadyAdded = prev.equipamientos.some(eq => eq.equipamiento_id === equipamientoToAdd.equipamiento_id);
       if (isAlreadyAdded) {
-        return {
+        const updatedFormData = {
           ...prev,
           equipamientos: prev.equipamientos.map(eq =>
             eq.equipamiento_id === equipamientoToAdd.equipamiento_id ? equipamientoToAdd : eq
           ),
         };
+        return updatedFormData;
       }
-      return {
+      const updatedFormData = {
         ...prev,
         equipamientos: [...prev.equipamientos, equipamientoToAdd],
       };
+      return updatedFormData;
     });
   };
 
