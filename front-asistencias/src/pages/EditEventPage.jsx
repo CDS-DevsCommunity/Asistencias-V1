@@ -1,0 +1,163 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import NotificationModal from '../components/common/NotificationModal';
+import Header from '../components/common/Header';
+import EventDetailsSection from '../components/events/EventDetailsSection';
+import EventTimingSection from '../components/events/EventTimingSection';
+import EventConfigSection from '../components/events/EventConfigSection';
+import { useAuth } from '../modules/auth/hooks/useAuth';
+import { obtenerEvento, actualizarEvento, obtenerTiposEventosActivos, listarEscenarios } from '../services/api';
+
+const EditEventPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [formData, setFormData] = useState(null);
+  const [tipos, setTipos] = useState([]);
+  const [escenarios, setEscenarios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', success: false });
+
+  useEffect(() => {
+    const cargarDatos = async () => {
+      try {
+        const [eventoData, tiposData, escenariosData] = await Promise.all([
+          obtenerEvento(id),
+          obtenerTiposEventosActivos(),
+          listarEscenarios()
+        ]);
+
+        if (eventoData.encargado !== user.username) {
+          setModalState({
+            isOpen: true,
+            title: 'Acceso Denegado',
+            message: 'No tienes permiso para editar este evento.',
+            success: false,
+            onCancel: () => navigate('/mis-eventos')
+          });
+          return;
+        }
+
+        setFormData({
+          ...eventoData,
+          cupo_maximo: eventoData.cupo_maximo.toString(),
+          tipo: eventoData.tipo.toString(),
+          escenario: eventoData.escenario.toString(),
+          equipamientos: eventoData.equipamientos_prestados.map(eq => ({
+            equipamiento_id: eq.equipamiento,
+            cantidad: eq.cantidad
+          }))
+        });
+        setTipos(tiposData || []);
+        setEscenarios(escenariosData.results || []);
+      } catch (error) {
+        console.error('Error al cargar los datos del evento:', error);
+        setModalState({
+          isOpen: true,
+          title: 'Error de Carga',
+          message: 'No se pudieron cargar los datos del evento.',
+          success: false,
+          onCancel: () => navigate('/mis-eventos')
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDatos();
+  }, [id, user, navigate]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const payload = {
+      titulo: formData.titulo,
+      descripcion: formData.descripcion,
+      direccion: formData.direccion,
+      fecha: formData.fecha,
+      hora_inicio: formData.hora_inicio,
+      hora_fin: formData.hora_fin,
+      cupo_maximo: parseInt(formData.cupo_maximo, 10),
+      cupo_disponible: formData.cupo_disponible,
+      encargado: user.username,
+      tipo: parseInt(formData.tipo, 10),
+      escenario: parseInt(formData.escenario, 10),
+    };
+
+    try {
+      await actualizarEvento(id, payload);
+      setModalState({
+        isOpen: true,
+        title: '¡Éxito!',
+        message: 'Evento actualizado exitosamente.',
+        success: true,
+      });
+    } catch (error) {
+      console.error('Error al actualizar el evento:', error.response?.data || error.message);
+      setModalState({
+        isOpen: true,
+        title: 'Error al Actualizar',
+        message: 'Hubo un error al actualizar el evento. Por favor, revisa los datos.',
+        success: false
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading || !formData) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-purple-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen">
+      <Header />
+      <NotificationModal 
+        isOpen={modalState.isOpen}
+        title={modalState.title}
+        message={modalState.message}
+        success={modalState.success}
+        onCancel={() => {
+          setModalState({ isOpen: false });
+          if (modalState.success || modalState.title === 'Acceso Denegado' || modalState.title === 'Error de Carga') {
+            navigate('/mis-eventos');
+          }
+        }}
+      />
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-4xl font-bold text-gray-800 mb-6">Editar Evento</h1>
+        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg space-y-8">
+          <EventDetailsSection formData={formData} handleChange={handleChange} />
+          <EventTimingSection formData={formData} handleChange={handleChange} />
+          <EventConfigSection 
+            formData={formData} 
+            handleChange={handleChange} 
+            tipos={tipos} 
+            escenarios={escenarios} 
+            setFormData={setFormData} 
+          />
+          <div className="flex justify-end">
+            <button type="button" onClick={() => navigate('/mis-eventos')} className="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg mr-4 hover:bg-gray-400">
+              Cancelar
+            </button>
+            <button type="submit" className="bg-purple-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-purple-700">
+              Actualizar Evento
+            </button>
+          </div>
+        </form>
+      </main>
+    </div>
+  );
+};
+
+export default EditEventPage;

@@ -7,9 +7,8 @@ import apiRequest from './config';
 
 // Listar todos los equipamientos (con paginación, búsqueda y ordenamiento)
 export const listarEquipamientos = (params = {}) => {
-  const queryParams = new URLSearchParams(params).toString();
-  const url = `/equipamientos/${queryParams ? `?${queryParams}` : ''}`;
-  return apiRequest(url);
+  const queryString = new URLSearchParams(params).toString();
+  return apiRequest(`/equipamientos/${queryString ? `?${queryString}` : ''}`);
 };
 
 // Crear un nuevo equipamiento

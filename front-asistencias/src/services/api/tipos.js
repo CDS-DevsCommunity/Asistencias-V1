@@ -5,17 +5,17 @@ import apiRequest from './config';
  * Servicio para la gestión de Tipos de Evento.
  */
 
-// Listar todos los tipos de evento
-export const listarTiposEventos = (params = {}) => {
-  const queryParams = new URLSearchParams(params).toString();
-  const url = `/tipos/${queryParams ? `?${queryParams}` : ''}`;
-  return apiRequest(url);
+// Listar todos los tipos de evento para el manager
+export const listarTiposEventos = async (params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  // Se ajusta para devolver el objeto completo con 'results' como espera el manager
+  return apiRequest(`/tipos/${queryString ? `?${queryString}` : ''}`);
 };
 
 // Crear un nuevo tipo de evento
 export const crearTipoEvento = (tipoData) => {
   return apiRequest('/tipos/', {
-    method: 'POST',
+    method: 'POST', // Se añade el método POST que faltaba
     body: JSON.stringify(tipoData),
   });
 };

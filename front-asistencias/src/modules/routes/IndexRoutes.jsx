@@ -9,6 +9,8 @@ const LoadingFallback = () => <div>Cargando...</div>;
 const AuthRoutes = lazy(() => import('../auth/route/AuthRoutes'));
 const EventsPage = lazy(() => import('../../pages/EventsPage'));
 const CreateEventPage = lazy(() => import('../../pages/CreateEventPage'));
+const MyEventsPage = lazy(() => import('../../pages/MyEventsPage'));
+const EditEventPage = lazy(() => import('../../pages/EditEventPage'));
 
 const IndexRoutes = () => {
   return (
@@ -22,6 +24,8 @@ const IndexRoutes = () => {
             {/* Rutas Protegidas */}
             <Route element={<ProtectedRoute />}>
               <Route path="/crear-evento" element={<CreateEventPage />} />
+              <Route path="/mis-eventos" element={<MyEventsPage />} />
+              <Route path="/editar-evento/:id" element={<EditEventPage />} />
               {/* Aquí puedes añadir más rutas que requieran autenticación */}
             </Route>
 

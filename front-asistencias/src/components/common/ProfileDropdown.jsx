@@ -51,6 +51,13 @@ const ProfileDropdown = () => {
           >
             Ver Perfil
           </Link>
+          <Link
+            to="/mis-eventos"
+            className="block px-4 py-2 text-gray-800 hover:bg-indigo-50 transition-colors"
+            onClick={() => setIsOpen(false)}
+          >
+            Mis eventos
+          </Link>
           <Link 
             to="/configuracion"
             className="block px-4 py-2 text-gray-800 hover:bg-indigo-50 transition-colors"

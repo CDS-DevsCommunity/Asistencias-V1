@@ -1,5 +1,6 @@
 // src/components/events/TiposManager.jsx
 import React, { useState, useEffect } from 'react';
+import NotificationModal from '../common/NotificationModal';
 import {
   listarTiposEventos,
   crearTipoEvento,
@@ -52,7 +53,8 @@ const TiposManager = ({ onUpdate }) => {
   const [editingTipo, setEditingTipo] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', success: false });
+  const [confirmationState, setConfirmationState] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
     cargarTipos();
@@ -61,13 +63,13 @@ const TiposManager = ({ onUpdate }) => {
   const cargarTipos = async () => {
     try {
       setLoading(true);
-      setError('');
       const response = await listarTiposEventos();
       const tiposList = response.results || [];
       setTipos(tiposList);
       if (onUpdate) onUpdate(tiposList);
     } catch (err) {
-      setError('Error al cargar los tipos de evento.');
+      console.error('Error al cargar tipos:', err);
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al cargar los tipos de evento.', success: false });
     } finally {
       setLoading(false);
     }
@@ -76,30 +78,41 @@ const TiposManager = ({ onUpdate }) => {
   const handleSave = async (tipoToSave) => {
     try {
       setLoading(true);
-      setError('');
-      await (tipoToSave.id
+      const isUpdating = !!tipoToSave.id;
+      await (isUpdating
         ? actualizarTipoEvento(tipoToSave.id, tipoToSave)
         : crearTipoEvento(tipoToSave));
       
       await cargarTipos();
       setIsCreating(false);
       setEditingTipo(null);
+      setModalState({ isOpen: true, title: 'Éxito', message: `Tipo de evento ${isUpdating ? 'actualizado' : 'creado'} exitosamente.`, success: true });
     } catch (err) {
-      setError('Error al guardar el tipo de evento.');
+      console.error('Error al guardar tipo:', err);
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al guardar el tipo de evento.', success: false });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar este tipo de evento?')) return;
+  const handleDelete = (id) => {
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Eliminación',
+      message: '¿Estás seguro de que quieres eliminar este tipo de evento?',
+      onConfirm: () => proceedWithDelete(id)
+    });
+  };
+
+  const proceedWithDelete = async (id) => {
+    setConfirmationState({ isOpen: false });
     try {
       setLoading(true);
-      setError('');
       await eliminarTipoEvento(id);
       await cargarTipos();
+      setModalState({ isOpen: true, title: 'Éxito', message: 'Tipo de evento eliminado exitosamente.', success: true });
     } catch (err) {
-      setError('Error al eliminar el tipo de evento.');
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al eliminar el tipo de evento.', success: false });
     } finally {
       setLoading(false);
     }
@@ -107,6 +120,20 @@ const TiposManager = ({ onUpdate }) => {
 
   return (
     <div className="space-y-6">
+      <NotificationModal 
+        isOpen={modalState.isOpen}
+        title={modalState.title}
+        message={modalState.message}
+        success={modalState.success}
+        onCancel={() => setModalState({ isOpen: false })}
+      />
+      <NotificationModal 
+        isOpen={confirmationState.isOpen}
+        title={confirmationState.title}
+        message={confirmationState.message}
+        onConfirm={confirmationState.onConfirm}
+        onCancel={() => setConfirmationState({ isOpen: false })}
+      />
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-gray-800">🏷️ Gestión de Tipos de Evento</h3>
         <button onClick={() => { setIsCreating(true); setEditingTipo(null); }} disabled={loading} className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-lg hover:from-cyan-700 hover:to-blue-700 font-semibold transition-all shadow-md disabled:opacity-50">
@@ -114,7 +141,6 @@ const TiposManager = ({ onUpdate }) => {
         </button>
       </div>
 
-      {error && <div className="p-4 bg-red-50 border border-red-200 rounded-lg"><p className="text-red-600 text-sm">{error}</p></div>}
       {loading && !isCreating && !editingTipo && (
         <div className="text-center p-4">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>

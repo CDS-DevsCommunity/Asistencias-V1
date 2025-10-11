@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import NotificationModal from '../common/NotificationModal';
 import {
   listarEscenarios,
   crearEscenario,
@@ -71,7 +72,8 @@ const EscenariosManager = ({ onUpdate }) => {
   const [editingEscenario, setEditingEscenario] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', success: false });
+  const [confirmationState, setConfirmationState] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
     cargarEscenarios();
@@ -80,13 +82,13 @@ const EscenariosManager = ({ onUpdate }) => {
   const cargarEscenarios = async () => {
     try {
       setLoading(true);
-      setError('');
       const response = await listarEscenarios();
       const escenariosList = response.results || [];
       setEscenarios(escenariosList);
       if (onUpdate) onUpdate(escenariosList);
     } catch (err) {
-      setError('Error al cargar los escenarios.');
+      console.error('Error al cargar escenarios:', err);
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al cargar los escenarios.', success: false });
     } finally {
       setLoading(false);
     }
@@ -95,30 +97,41 @@ const EscenariosManager = ({ onUpdate }) => {
   const handleSave = async (escenarioToSave) => {
     try {
       setLoading(true);
-      setError('');
-      await (escenarioToSave.id
+      const isUpdating = !!escenarioToSave.id;
+      await (isUpdating
         ? actualizarEscenario(escenarioToSave.id, escenarioToSave)
         : crearEscenario(escenarioToSave));
       
       await cargarEscenarios();
       setIsCreating(false);
       setEditingEscenario(null);
+      setModalState({ isOpen: true, title: 'Éxito', message: `Escenario ${isUpdating ? 'actualizado' : 'creado'} exitosamente.`, success: true });
     } catch (err) {
-      setError('Error al guardar el escenario.');
+      console.error('Error al guardar escenario:', err);
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al guardar el escenario.', success: false });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar este escenario?')) return;
+  const handleDelete = (id) => {
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Eliminación',
+      message: '¿Estás seguro de que quieres eliminar este escenario?',
+      onConfirm: () => proceedWithDelete(id)
+    });
+  };
+
+  const proceedWithDelete = async (id) => {
+    setConfirmationState({ isOpen: false });
     try {
       setLoading(true);
-      setError('');
       await eliminarEscenario(id);
       await cargarEscenarios();
+      setModalState({ isOpen: true, title: 'Éxito', message: 'Escenario eliminado exitosamente.', success: true });
     } catch (err) {
-      setError('Error al eliminar el escenario.');
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al eliminar el escenario.', success: false });
     } finally {
       setLoading(false);
     }
@@ -126,6 +139,20 @@ const EscenariosManager = ({ onUpdate }) => {
 
   return (
     <div className="space-y-6">
+      <NotificationModal 
+        isOpen={modalState.isOpen}
+        title={modalState.title}
+        message={modalState.message}
+        success={modalState.success}
+        onCancel={() => setModalState({ isOpen: false })}
+      />
+      <NotificationModal 
+        isOpen={confirmationState.isOpen}
+        title={confirmationState.title}
+        message={confirmationState.message}
+        onConfirm={confirmationState.onConfirm}
+        onCancel={() => setConfirmationState({ isOpen: false })}
+      />
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-gray-800">🏛️ Gestión de Escenarios</h3>
         <button onClick={() => { setIsCreating(true); setEditingEscenario(null); }} disabled={loading} className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 font-semibold transition-all shadow-md disabled:opacity-50">
@@ -133,7 +160,6 @@ const EscenariosManager = ({ onUpdate }) => {
         </button>
       </div>
 
-      {error && <div className="p-4 bg-red-50 border border-red-200 rounded-lg"><p className="text-red-600 text-sm">{error}</p></div>}
       {loading && !isCreating && !editingEscenario && (
         <div className="text-center p-4">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>

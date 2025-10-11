@@ -7,9 +7,8 @@ import apiRequest from './config';
 
 // Listar todos los escenarios (con paginación, búsqueda y ordenamiento)
 export const listarEscenarios = (params = {}) => {
-  const queryParams = new URLSearchParams(params).toString();
-  const url = `/escenarios/${queryParams ? `?${queryParams}` : ''}`;
-  return apiRequest(url);
+  const queryString = new URLSearchParams(params).toString();
+  return apiRequest(`/escenarios/${queryString ? `?${queryString}` : ''}`);
 };
 
 // Crear un nuevo escenario

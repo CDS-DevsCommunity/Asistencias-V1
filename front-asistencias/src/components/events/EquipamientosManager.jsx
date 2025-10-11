@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import NotificationModal from '../common/NotificationModal';
 
 import { 
   listarEquipamientos, 
@@ -49,7 +50,8 @@ const EquipamientosManager = ({ onAdd, onUpdate, onClose }) => {
   const [editingEquipamiento, setEditingEquipamiento] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', success: false });
+  const [confirmationState, setConfirmationState] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [selectedEquipamientos, setSelectedEquipamientos] = useState({});
 
   const handleSelectionChange = (equipamientoId, cantidad) => {
@@ -90,13 +92,13 @@ const EquipamientosManager = ({ onAdd, onUpdate, onClose }) => {
   const cargarEquipamientos = async () => {
     try {
       setLoading(true);
-      setError('');
       const response = await listarEquipamientos();
       const equipamientosList = response.results || [];
       setEquipamientos(equipamientosList);
       if (onUpdate) onUpdate(equipamientosList);
     } catch (err) {
-      setError('Error al cargar los equipamientos.');
+      console.error('Error al cargar equipamientos:', err);
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al cargar los equipamientos.', success: false });
     } finally {
       setLoading(false);
     }
@@ -105,30 +107,41 @@ const EquipamientosManager = ({ onAdd, onUpdate, onClose }) => {
   const handleSave = async (equipamientoToSave) => {
     try {
       setLoading(true);
-      setError('');
-      await (equipamientoToSave.id
+      const isUpdating = !!equipamientoToSave.id;
+      await (isUpdating
         ? actualizarEquipamiento(equipamientoToSave.id, equipamientoToSave)
         : crearEquipamiento(equipamientoToSave));
       
       await cargarEquipamientos();
       setIsCreating(false);
       setEditingEquipamiento(null);
+      setModalState({ isOpen: true, title: 'Éxito', message: `Equipamiento ${isUpdating ? 'actualizado' : 'creado'} exitosamente.`, success: true });
     } catch (err) {
-      setError('Error al guardar el equipamiento.');
+      console.error('Error al guardar equipamiento:', err);
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al guardar el equipamiento.', success: false });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('¿Estás seguro de que quieres eliminar este equipamiento?')) return;
+  const handleDelete = (id) => {
+    setConfirmationState({
+      isOpen: true,
+      title: 'Confirmar Eliminación',
+      message: '¿Estás seguro de que quieres eliminar este equipamiento?',
+      onConfirm: () => proceedWithDelete(id)
+    });
+  };
+
+  const proceedWithDelete = async (id) => {
+    setConfirmationState({ isOpen: false });
     try {
       setLoading(true);
-      setError('');
       await eliminarEquipamiento(id);
       await cargarEquipamientos();
+      setModalState({ isOpen: true, title: 'Éxito', message: 'Equipamiento eliminado exitosamente.', success: true });
     } catch (err) {
-      setError('Error al eliminar el equipamiento.');
+      setModalState({ isOpen: true, title: 'Error', message: 'Error al eliminar el equipamiento.', success: false });
     } finally {
       setLoading(false);
     }
@@ -136,6 +149,20 @@ const EquipamientosManager = ({ onAdd, onUpdate, onClose }) => {
 
   return (
     <div className="space-y-6">
+      <NotificationModal 
+        isOpen={modalState.isOpen}
+        title={modalState.title}
+        message={modalState.message}
+        success={modalState.success}
+        onCancel={() => setModalState({ isOpen: false })}
+      />
+      <NotificationModal 
+        isOpen={confirmationState.isOpen}
+        title={confirmationState.title}
+        message={confirmationState.message}
+        onConfirm={confirmationState.onConfirm}
+        onCancel={() => setConfirmationState({ isOpen: false })}
+      />
       <div className="flex justify-between items-center">
         <h3 className="text-xl font-bold text-gray-800">🔧 Gestión de Equipamientos</h3>
         <button onClick={() => { setIsCreating(true); setEditingEquipamiento(null); }} disabled={loading} className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 font-semibold transition-all duration-200 shadow-md disabled:opacity-50">
@@ -143,7 +170,6 @@ const EquipamientosManager = ({ onAdd, onUpdate, onClose }) => {
         </button>
       </div>
 
-      {error && <div className="p-4 bg-red-50 border border-red-200 rounded-lg"><p className="text-red-600 text-sm">{error}</p></div>}
       {loading && !isCreating && !editingEquipamiento && (
         <div className="text-center p-4">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
