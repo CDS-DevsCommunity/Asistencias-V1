@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from django.utils.translation import gettext_lazy as _
 from rest_framework import exceptions, status
@@ -8,7 +8,15 @@ class TokenError(Exception):
     pass
 
 
+class ExpiredTokenError(TokenError):
+    pass
+
+
 class TokenBackendError(Exception):
+    pass
+
+
+class TokenBackendExpiredToken(TokenBackendError):
     pass
 
 
@@ -18,7 +26,7 @@ class DetailDictMixin:
 
     def __init__(
         self,
-        detail: Union[Dict[str, Any], str, None] = None,
+        detail: Union[dict[str, Any], str, None] = None,
         code: Optional[str] = None,
     ) -> None:
         """

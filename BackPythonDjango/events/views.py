@@ -1,3 +1,54 @@
+from rest_framework import viewsets, permissions
+from .models import Tipo, Escenario, Equipamiento, Evento, EventoEscenario, EquipamientoPrestado, Inscripcion, Equipo, Voluntario
+from rest_framework import serializers
+from .serializers import (
+    TipoSerializer, EscenarioSerializer, EquipamientoSerializer,
+    EventoSerializer, EventoEscenarioSerializer, EquipamientoPrestadoSerializer,
+    InscripcionSerializer, EquipoSerializer, VoluntarioSerializer,
+    EventoCreateSerializer, EventoUpdateSerializer, EventoListSerializer
+)
+
+
+class InscripcionViewSet(viewsets.ModelViewSet):
+    queryset = Inscripcion.objects.select_related('persona', 'evento').all()
+    serializer_class = InscripcionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        # Si el cliente envía persona, se usará; sino, intentar usar persona asociada al user
+        persona = None
+        persona_id = self.request.data.get('persona') or self.request.data.get('persona_id')
+        if persona_id:
+            try:
+                from authentication.models import Persona
+                persona = Persona.objects.get(pk=int(persona_id))
+            except Exception:
+                persona = None
+
+        # Intentamos asociar persona del usuario autenticado si existe
+        if not persona and hasattr(self.request.user, 'persona'):
+            persona = self.request.user.persona
+
+        if persona:
+            serializer.save(persona=persona)
+        else:
+            raise serializers.ValidationError('Persona no encontrada o no especificada')
+
+
+from rest_framework import status
+
+
+class EquipoViewSet(viewsets.ModelViewSet):
+    queryset = Equipo.objects.select_related('evento').all()
+    serializer_class = EquipoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class VoluntarioViewSet(viewsets.ModelViewSet):
+    queryset = Voluntario.objects.select_related('usuario', 'equipo').all()
+    serializer_class = VoluntarioSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response

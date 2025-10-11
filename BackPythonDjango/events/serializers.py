@@ -194,3 +194,53 @@ class EventoListSerializer(serializers.ModelSerializer):
             'cupo_maximo', 'cupo_disponible', 'encargado',
             'tipo_nombre', 'escenario_nombre', 'is_full'
         ]
+
+
+class InscripcionSerializer(serializers.ModelSerializer):
+    persona_nombre = serializers.CharField(source='persona.__str__', read_only=True)
+    evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
+
+    class Meta:
+        # model se asignará más abajo para evitar import circular
+        model = None
+        fields = [
+            'id', 'persona', 'persona_nombre', 'evento', 'evento_titulo',
+            'fecha_inscripcion', 'hora_inscripcion', 'estado', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'persona_nombre', 'fecha_inscripcion', 'hora_inscripcion', 'created_at', 'updated_at']
+
+
+# Evitar import circular: asignar model dinámicamente
+try:
+    from .models import Inscripcion
+    InscripcionSerializer.Meta.model = Inscripcion
+except Exception:
+    pass
+
+
+class EquipoSerializer(serializers.ModelSerializer):
+    evento_titulo = serializers.CharField(source='evento.titulo', read_only=True)
+
+    class Meta:
+        model = None
+        fields = ['id', 'nombre', 'descripcion', 'cantidad', 'evento', 'evento_titulo', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class VoluntarioSerializer(serializers.ModelSerializer):
+    usuario_username = serializers.CharField(source='usuario.username', read_only=True)
+    equipo_nombre = serializers.CharField(source='equipo.nombre', read_only=True)
+
+    class Meta:
+        model = None
+        fields = ['id', 'usuario', 'usuario_username', 'equipo', 'equipo_nombre', 'fecha_union', 'rol_en_equipo']
+        read_only_fields = ['id', 'fecha_union']
+
+
+# Asignar modelos dinámicamente para evitar import circular
+try:
+    from .models import Equipo, Voluntario
+    EquipoSerializer.Meta.model = Equipo
+    VoluntarioSerializer.Meta.model = Voluntario
+except Exception:
+    pass

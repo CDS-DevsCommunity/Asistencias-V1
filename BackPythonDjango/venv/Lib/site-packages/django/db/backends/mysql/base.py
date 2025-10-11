@@ -3,6 +3,7 @@ MySQL database backend for Django.
 
 Requires mysqlclient: https://pypi.org/project/mysqlclient/
 """
+
 from django.core.exceptions import ImproperlyConfigured
 from django.db import IntegrityError
 from django.db.backends import utils as backend_utils
@@ -214,7 +215,7 @@ class DatabaseWrapper(BaseDatabaseWrapper):
     def get_connection_params(self):
         kwargs = {
             "conv": django_conversions,
-            "charset": "utf8",
+            "charset": "utf8mb4",
         }
         settings_dict = self.settings_dict
         if settings_dict["USER"]:
@@ -395,10 +396,6 @@ class DatabaseWrapper(BaseDatabaseWrapper):
                 "PositiveIntegerField": "`%(column)s` >= 0",
                 "PositiveSmallIntegerField": "`%(column)s` >= 0",
             }
-            if self.mysql_is_mariadb and self.mysql_version < (10, 4, 3):
-                # MariaDB < 10.4.3 doesn't automatically use the JSON_VALID as
-                # a check constraint.
-                check_constraints["JSONField"] = "JSON_VALID(`%(column)s`)"
             return check_constraints
         return {}
 

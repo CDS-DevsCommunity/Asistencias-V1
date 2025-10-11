@@ -1,8 +1,9 @@
 """
- This module houses the GEOSCoordSeq object, which is used internally
- by GEOSGeometry to house the actual coordinates of the Point,
- LineString, and LinearRing geometries.
+This module houses the GEOSCoordSeq object, which is used internally
+by GEOSGeometry to house the actual coordinates of the Point,
+LineString, and LinearRing geometries.
 """
+
 from ctypes import byref, c_byte, c_double, c_uint
 
 from django.contrib.gis.geos import prototypes as capi

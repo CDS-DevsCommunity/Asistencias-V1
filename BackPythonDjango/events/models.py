@@ -203,3 +203,68 @@ class EquipamientoPrestado(models.Model):
     def __str__(self):
         estado = "Devuelto" if self.devuelto else "Prestado"
         return f"{self.equipamiento.nombre} - {self.evento.titulo} ({estado})"
+
+
+class Inscripcion(models.Model):
+    """Registro de inscripciones de personas/usuarios a eventos"""
+    ESTADO_CHOICES = [
+        ('pendiente', 'Pendiente'),
+        ('confirmada', 'Confirmada'),
+        ('cancelada', 'Cancelada'),
+        ('asistio', 'Asistió'),
+        ('no_asistio', 'No asistió'),
+    ]
+
+    # Relación con Persona (puede ser usuario registrado o asistente sin cuenta)
+    persona = models.ForeignKey('authentication.Persona', on_delete=models.CASCADE, related_name='inscripciones')
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name='inscripciones')
+    fecha_inscripcion = models.DateField(auto_now_add=True)
+    hora_inscripcion = models.TimeField(auto_now_add=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='pendiente')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['persona', 'evento']
+        verbose_name = 'Inscripción'
+        verbose_name_plural = 'Inscripciones'
+
+    def __str__(self):
+        # Mostrar nombre si está disponible, sino una referencia por id
+        persona_str = str(self.persona) if self.persona else f"Persona {self.persona_id}"
+        return f"{persona_str} -> {self.evento.titulo} ({self.estado})"
+
+
+class Equipo(models.Model):
+    """Modelo para equipos de voluntarios"""
+    nombre = models.CharField(max_length=200)
+    descripcion = models.TextField(blank=True, null=True)
+    cantidad = models.PositiveIntegerField(default=0)
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name='equipos')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Equipo'
+        verbose_name_plural = 'Equipos'
+
+    def __str__(self):
+        return f"{self.nombre} ({self.evento.titulo})"
+
+
+class Voluntario(models.Model):
+    """Tabla intermedia para usuarios que pertenecen a equipos"""
+    from django.contrib.auth.models import User
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='voluntariados')
+    equipo = models.ForeignKey(Equipo, on_delete=models.CASCADE, related_name='voluntarios')
+    fecha_union = models.DateField(auto_now_add=True)
+    rol_en_equipo = models.CharField(max_length=150, blank=True)
+
+    class Meta:
+        unique_together = ['usuario', 'equipo']
+        verbose_name = 'Voluntario'
+        verbose_name_plural = 'Voluntarios'
+
+    def __str__(self):
+        return f"{self.usuario.username} en {self.equipo.nombre}"

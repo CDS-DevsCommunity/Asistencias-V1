@@ -7,7 +7,47 @@ from django.contrib.auth.models import User
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from .serializers import UserRegistrationSerializer, UserLoginSerializer, UserSerializer, TokenSerializer
+from .serializers import (
+    UserRegistrationSerializer, UserLoginSerializer, UserSerializer, TokenSerializer,
+    CargoSerializer, PersonaSerializer, PermisoSerializer, RolSerializer, RolPermisoSerializer
+)
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from .models import Persona, Cargo
+
+
+class CargoViewSet(viewsets.ModelViewSet):
+    queryset = Cargo.objects.all()
+    serializer_class = CargoSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class PersonaViewSet(viewsets.ModelViewSet):
+    queryset = Persona.objects.select_related('user', 'cargo').all()
+    serializer_class = PersonaSerializer
+    permission_classes = [IsAuthenticated]
+
+
+# Permiso y Rol
+from .models import Permiso, Rol, RolPermiso
+
+
+class PermisoViewSet(viewsets.ModelViewSet):
+    queryset = Permiso.objects.all()
+    serializer_class = PermisoSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class RolViewSet(viewsets.ModelViewSet):
+    queryset = Rol.objects.prefetch_related('permisos').all()
+    serializer_class = RolSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class RolPermisoViewSet(viewsets.ModelViewSet):
+    queryset = RolPermiso.objects.select_related('rol', 'permiso').all()
+    serializer_class = RolPermisoSerializer
+    permission_classes = [IsAuthenticated]
 
 
 @swagger_auto_schema(

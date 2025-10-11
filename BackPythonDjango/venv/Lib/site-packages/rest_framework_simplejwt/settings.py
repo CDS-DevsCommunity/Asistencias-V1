@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Any, Dict
+from typing import Any
 
 from django.conf import settings
 from django.test.signals import setting_changed
@@ -44,6 +44,7 @@ DEFAULTS = {
     "SLIDING_TOKEN_REFRESH_SERIALIZER": "rest_framework_simplejwt.serializers.TokenRefreshSlidingSerializer",
     "CHECK_REVOKE_TOKEN": False,
     "REVOKE_TOKEN_CLAIM": "hash_password",
+    "CHECK_USER_IS_ACTIVE": True,
 }
 
 IMPORT_STRINGS = (
@@ -62,7 +63,7 @@ REMOVED_SETTINGS = (
 
 
 class APISettings(_APISettings):  # pragma: no cover
-    def __check_user_settings(self, user_settings: Dict[str, Any]) -> Dict[str, Any]:
+    def __check_user_settings(self, user_settings: dict[str, Any]) -> dict[str, Any]:
         SETTINGS_DOC = "https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html"
 
         for setting in REMOVED_SETTINGS:

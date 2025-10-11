@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -
 #
 # This file is part of gunicorn released under the MIT license.
 # See the NOTICE for more information.
@@ -20,6 +19,15 @@ class NoMoreData(IOError):
 
     def __str__(self):
         return "No more data after: %r" % self.buf
+
+
+class ConfigurationProblem(ParseException):
+    def __init__(self, info):
+        self.info = info
+        self.code = 500
+
+    def __str__(self):
+        return "Configuration problem: %s" % self.info
 
 
 class InvalidRequestLine(ParseException):
@@ -44,7 +52,7 @@ class InvalidHTTPVersion(ParseException):
         self.version = version
 
     def __str__(self):
-        return "Invalid HTTP Version: %r" % self.version
+        return "Invalid HTTP Version: %r" % (self.version,)
 
 
 class InvalidHeader(ParseException):
@@ -56,12 +64,29 @@ class InvalidHeader(ParseException):
         return "Invalid HTTP Header: %r" % self.hdr
 
 
+class ObsoleteFolding(ParseException):
+    def __init__(self, hdr):
+        self.hdr = hdr
+
+    def __str__(self):
+        return "Obsolete line folding is unacceptable: %r" % (self.hdr, )
+
+
 class InvalidHeaderName(ParseException):
     def __init__(self, hdr):
         self.hdr = hdr
 
     def __str__(self):
         return "Invalid HTTP header name: %r" % self.hdr
+
+
+class UnsupportedTransferCoding(ParseException):
+    def __init__(self, hdr):
+        self.hdr = hdr
+        self.code = 501
+
+    def __str__(self):
+        return "Unsupported transfer coding: %r" % self.hdr
 
 
 class InvalidChunkSize(IOError):
