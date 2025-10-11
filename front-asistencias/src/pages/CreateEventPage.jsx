@@ -153,7 +153,11 @@ const CreateEventPage = () => {
         <EscenariosManager onUpdate={setEscenarios} />
       </Modal>
       <Modal isOpen={isEquipamientosModalOpen} onClose={() => setIsEquipamientosModalOpen(false)} title="Gestionar Equipamientos">
-        <EquipamientosManager onAdd={handleAddEquipamiento} selectedEquipamientos={formData.equipamientos} />
+        <EquipamientosManager 
+          onAdd={handleAddEquipamiento} 
+          selectedEquipamientos={formData.equipamientos}
+          onClose={() => setIsEquipamientosModalOpen(false)}
+        />
       </Modal>
       <Modal isOpen={isTiposModalOpen} onClose={() => setIsTiposModalOpen(false)} title="Gestionar Tipos de Evento">
         <TiposManager onUpdate={setTipos} />

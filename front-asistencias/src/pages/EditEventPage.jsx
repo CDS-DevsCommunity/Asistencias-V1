@@ -5,6 +5,10 @@ import Header from '../components/common/Header';
 import EventDetailsSection from '../components/events/EventDetailsSection';
 import EventTimingSection from '../components/events/EventTimingSection';
 import EventConfigSection from '../components/events/EventConfigSection';
+import Modal from '../components/common/Modal';
+import EscenariosManager from '../components/events/EscenariosManager';
+import EquipamientosManager from '../components/events/EquipamientosManager';
+import TiposManager from '../components/events/TiposManager';
 import { useAuth } from '../modules/auth/hooks/useAuth';
 import { obtenerEvento, actualizarEvento, obtenerTiposEventosActivos, listarEscenarios } from '../services/api';
 
@@ -17,6 +21,9 @@ const EditEventPage = () => {
   const [escenarios, setEscenarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalState, setModalState] = useState({ isOpen: false, title: '', message: '', success: false });
+  const [isEscenariosModalOpen, setIsEscenariosModalOpen] = useState(false);
+  const [isEquipamientosModalOpen, setIsEquipamientosModalOpen] = useState(false);
+  const [isTiposModalOpen, setIsTiposModalOpen] = useState(false);
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -70,6 +77,31 @@ const EditEventPage = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleRemoveEquipamiento = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      equipamientos: prev.equipamientos.filter((_, index) => index !== indexToRemove)
+    }));
+  };
+
+  const handleAddEquipamiento = (equipamientoToAdd) => {
+    setFormData(prev => {
+      const isAlreadyAdded = prev.equipamientos.some(eq => eq.equipamiento_id === equipamientoToAdd.equipamiento_id);
+      if (isAlreadyAdded) {
+        return {
+          ...prev,
+          equipamientos: prev.equipamientos.map(eq => 
+            eq.equipamiento_id === equipamientoToAdd.equipamiento_id ? equipamientoToAdd : eq
+          )
+        };
+      }
+      return {
+        ...prev,
+        equipamientos: [...prev.equipamientos, equipamientoToAdd]
+      };
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -140,6 +172,21 @@ const EditEventPage = () => {
           }
         }}
       />
+
+      <Modal isOpen={isEscenariosModalOpen} onClose={() => setIsEscenariosModalOpen(false)} title="Gestionar Escenarios">
+        <EscenariosManager onUpdate={setEscenarios} />
+      </Modal>
+      <Modal isOpen={isEquipamientosModalOpen} onClose={() => setIsEquipamientosModalOpen(false)} title="Gestionar Equipamientos">
+        <EquipamientosManager 
+          onAdd={handleAddEquipamiento} 
+          selectedEquipamientos={formData.equipamientos}
+          onClose={() => setIsEquipamientosModalOpen(false)}
+        />
+      </Modal>
+      <Modal isOpen={isTiposModalOpen} onClose={() => setIsTiposModalOpen(false)} title="Gestionar Tipos de Evento">
+        <TiposManager onUpdate={setTipos} />
+      </Modal>
+
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold text-gray-800 mb-6">Editar Evento</h1>
         <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-lg space-y-8">
@@ -148,9 +195,12 @@ const EditEventPage = () => {
           <EventConfigSection 
             formData={formData} 
             handleChange={handleChange} 
+            onManageEquipamientos={() => setIsEquipamientosModalOpen(true)}
+            onRemoveEquipamiento={handleRemoveEquipamiento}
+            onManageEscenarios={() => setIsEscenariosModalOpen(true)}
+            onManageTipos={() => setIsTiposModalOpen(true)}
             tipos={tipos} 
             escenarios={escenarios} 
-            setFormData={setFormData} 
           />
           <div className="flex justify-end">
             <button type="button" onClick={() => navigate('/mis-eventos')} className="bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg mr-4 hover:bg-gray-400">
